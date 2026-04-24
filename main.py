@@ -161,6 +161,7 @@ def plot_graph(G):
 def home(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload(request: Request, file: UploadFile = File(...)):
     tmp_path = None
@@ -170,10 +171,14 @@ async def upload(request: Request, file: UploadFile = File(...)):
         print(f"[DEBUG] File size: {len(contents)} bytes")
 
         if len(contents) > MAX_FILE_SIZE:
-             return templates.TemplateResponse(request, "index.html", {"error": "File exceeds 100 KB limit."})
+            return templates.TemplateResponse(request, "index.html", {
+                "error": "File exceeds 100 KB limit."
+            })
 
         if not file.filename.lower().endswith(".pdb"):
-             return templates.TemplateResponse(request, "index.html", {"error": "Only .pdb files are accepted."})
+            return templates.TemplateResponse(request, "index.html", {
+                "error": "Only .pdb files are accepted."
+            })
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdb") as tmp:
             tmp.write(contents)
@@ -185,7 +190,7 @@ async def upload(request: Request, file: UploadFile = File(...)):
         stats = compute_stats(G)
         graph_html = plot_graph(G)
 
-             return  templates.TemplateResponse(request, "index.html", {
+        return templates.TemplateResponse(request, "index.html", {
             "graph": graph_html,
             "stats": stats,
             "filename": file.filename,
