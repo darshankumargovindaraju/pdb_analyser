@@ -201,6 +201,8 @@ async def upload(request: Request, file: UploadFile = File(...)):
         })
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()   # this prints full error to Render logs
         return templates.TemplateResponse("index.html", {
             "request": request,
             "error": str(e),
