@@ -1,9 +1,7 @@
-fastapi
+fastapi==0.115.5
+starlette==0.41.3
 uvicorn[standard]
 jinja2
 python-multipart
 MDAnalysis==2.7.0
-networkx
-plotly==5.24.1
 numpy==1.26.4
-starlette>=1.0.0
