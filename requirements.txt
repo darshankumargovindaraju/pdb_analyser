@@ -4,5 +4,5 @@ jinja2
 python-multipart
 MDAnalysis==2.7.0
 networkx
-plotly
+plotly==5.24.1
 numpy
