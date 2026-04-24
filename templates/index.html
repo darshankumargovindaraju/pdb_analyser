@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDB Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & tokens ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f5f5f7;
+      --surface:   #ffffff;
+      --surface2:  #fafafa;
+      --border:    rgba(0,0,0,0.08);
+      --text:      #1d1d1f;
+      --muted:     #6e6e73;
+      --accent:    #0071e3;
+      --accent-hov:#0077ed;
+      --accent-bg: rgba(0,113,227,0.07);
+      --danger:    #ff3b30;
+      --danger-bg: rgba(255,59,48,0.07);
+      --success:   #34c759;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.05);
+      --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      --mono: 'DM Mono', 'SF Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px; height: 56px;
+      background: linear-gradient(145deg, #0071e3, #34aadc);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(0,113,227,0.28);
+    }
+
+    .logo-mark svg { width: 28px; height: 28px; fill: white; }
+
+    header h1 {
+      font-size: clamp(28px, 5vw, 36px);
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    header p {
+      margin-top: 10px;
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .card + .card { margin-top: 20px; }
+
+    .card-body { padding: 28px 32px; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Upload zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      width: 40px; height: 40px;
+      margin: 0 auto 12px;
+      background: var(--accent-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .drop-icon svg { width: 20px; height: 20px; stroke: var(--accent); }
+
+    .drop-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .drop-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    #file-name {
+      margin-top: 10px;
+      font-size: 13px;
+      font-family: var(--mono);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Submit button ── */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px 20px;
+      background: var(--accent);
+      color: white;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+      box-shadow: 0 2px 8px rgba(0,113,227,0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hov);
+      box-shadow: 0 4px 14px rgba(0,113,227,0.38);
+    }
+
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Loader ── */
+    .loader-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 0 4px;
+    }
+
+    .loader-wrap.active { display: flex; }
+
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .loader-wrap span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Limit notice ── */
+    .notice {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .notice svg { width: 14px; height: 14px; stroke: var(--muted); flex-shrink: 0; }
+    .notice span { font-size: 12.5px; color: var(--muted); }
+
+    /* ── Error ── */
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 18px;
+      background: var(--danger-bg);
+      border: 1px solid rgba(255,59,48,0.2);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .error-banner svg { width: 16px; height: 16px; stroke: var(--danger); flex-shrink: 0; margin-top: 1px; }
+    .error-banner span { font-size: 14px; color: var(--danger); font-weight: 500; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 14px;
+      text-align: center;
+      transition: box-shadow 0.2s;
+    }
+
+    .stat-item:hover { box-shadow: var(--shadow-sm); }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .stat-label {
+      font-size: 11.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ── Graph card ── */
+    .graph-wrap {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--surface2);
+    }
+
+    .filename-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--accent-bg);
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-family: var(--mono);
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+
+    .filename-badge svg { width: 12px; height: 12px; stroke: var(--accent); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .card:nth-child(2) { animation-delay: 0.05s; }
+    .card:nth-child(3) { animation-delay: 0.10s; }
+    .card:nth-child(4) { animation-delay: 0.15s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .card-body { padding: 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="5"  cy="12" r="2.4"/>
+        <circle cx="19" cy="5"  r="2.4"/>
+        <circle cx="19" cy="19" r="2.4"/>
+        <circle cx="12" cy="8"  r="2.4"/>
+        <circle cx="12" cy="16" r="2.4"/>
+        <line x1="5"  y1="12" x2="12" y2="8"  stroke="white" stroke-width="1.6"/>
+        <line x1="5"  y1="12" x2="12" y2="16" stroke="white" stroke-width="1.6"/>
+        <line x1="12" y1="8"  x2="19" y2="5"  stroke="white" stroke-width="1.6"/>
+        <line x1="12" y1="16" x2="19" y2="19" stroke="white" stroke-width="1.6"/>
+        <line x1="12" y1="8"  x2="12" y2="16" stroke="white" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <h1>PDB Network Analyzer</h1>
+    <p>Visualize protein residue contact networks from PDB files</p>
+  </header>
+
+  <!-- Error banner -->
+  {% if error %}
+  <div class="error-banner">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <span>{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <!-- Upload card -->
+  <div class="card">
+    <div class="card-body">
+      <p class="card-title">Upload PDB File</p>
+      <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" name="file" accept=".pdb" id="file-input" required />
+          <div class="drop-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4 4-4"/>
+            </svg>
+          </div>
+          <p class="drop-label">Drop your .pdb file here</p>
+          <p class="drop-sub">or click to browse</p>
+          <p id="file-name"></p>
+        </div>
+
+        <button class="btn-primary" type="submit" id="submit-btn">Analyze Structure</button>
+
+        <div class="loader-wrap" id="loader">
+          <div class="spinner"></div>
+          <span>Parsing structure and building graph…</span>
+        </div>
+      </form>
+
+      <div class="notice">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none"/>
+        </svg>
+        <span>Max file size: 100 KB · Cα atoms used · Up to 150 residues visualized</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  {% if stats %}
+
+  <!-- Filename badge + Stats -->
+  <div class="card">
+    <div class="card-body">
+      {% if filename %}
+      <div class="filename-badge">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8l-4-4H7z"/>
+        </svg>
+        {{ filename }}
+      </div>
+      {% endif %}
+      <p class="card-title">Network Statistics</p>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.nodes }}</div>
+          <div class="stat-label">Nodes</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.edges }}</div>
+          <div class="stat-label">Edges</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.density }}</div>
+          <div class="stat-label">Density</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.avg_degree }}</div>
+          <div class="stat-label">Avg Degree</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.components }}</div>
+          <div class="stat-label">Components</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.clustering }}</div>
+          <div class="stat-label">Clustering</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graph -->
+  <div class="card">
+    <div class="card-body">
+      <p class="card-title">Residue Contact Network</p>
+      <div class="graph-wrap">
+        {{ graph|safe }}
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div><!-- /page -->
+
+<script>
+  const input    = document.getElementById('file-input');
+  const label    = document.getElementById('file-name');
+  const dropZone = document.getElementById('drop-zone');
+  const form     = document.getElementById('upload-form');
+  const btn      = document.getElementById('submit-btn');
+  const loader   = document.getElementById('loader');
+
+  // File chosen via click
+  input.addEventListener('change', () => {
+    label.textContent = input.files[0]?.name ?? '';
+  });
+
+  // Drag-and-drop visual feedback
+  ['dragenter','dragover'].forEach(e =>
+    dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); })
+  );
+  ['dragleave','drop'].forEach(e =>
+    dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); })
+  );
+  dropZone.addEventListener('drop', ev => {
+    const files = ev.dataTransfer.files;
+    if (files.length) {
+      input.files = files;
+      label.textContent = files[0].name;
+    }
+  });
+
+  // Show spinner on submit
+  form.addEventListener('submit', () => {
+    btn.disabled = true;
+    loader.classList.add('active');
+  });
+</script>
+</body>
+</html>
